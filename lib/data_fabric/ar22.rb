@@ -20,8 +20,9 @@ module DataFabric
       def data_fabric(options)
         DataFabric.log { "Creating data_fabric proxy for class #{name}" }
         @proxy = DataFabric::ConnectionProxy.new(self, options)
-        
+
         class << self
+          alias_method :__original_ar_connection, :connection
           def connection
             @proxy
           end
@@ -44,9 +45,9 @@ module DataFabric
 
   class ConnectionProxy
     cattr_accessor :shard_pools
-    
+
     def initialize(model_class, options)
-      @model_class = model_class      
+      @model_class = model_class
       @replicated  = options[:replicated]
       @shard_group = options[:shard_by]
       @prefix      = options[:prefix]
@@ -55,7 +56,7 @@ module DataFabric
       @model_class.send :include, ActiveRecordConnectionMethods if @replicated
     end
 
-    delegate :insert, :update, :delete, :create_table, :rename_table, :drop_table, :add_column, :remove_column, 
+    delegate :insert, :update, :delete, :create_table, :rename_table, :drop_table, :add_column, :remove_column,
       :change_column, :change_column_default, :rename_column, :add_index, :remove_index, :initialize_schema_information,
       :dump_schema_information, :execute, :execute_ignore_duplicate, :to => :master
 
@@ -68,7 +69,7 @@ module DataFabric
       return yield if in_transaction?
 
       with_master do
-        connection.transaction(start_db_transaction, &block) 
+        connection.transaction(start_db_transaction, &block)
       end
     end
 
@@ -89,7 +90,7 @@ module DataFabric
     ensure
       set_role(old_role)
     end
-    
+
     def connected?
       current_pool.connected?
     end
@@ -102,13 +103,18 @@ module DataFabric
 
     def current_pool
       name = connection_name
-      self.class.shard_pools[name] ||= begin
-        config = ActiveRecord::Base.configurations[name]
-        raise ArgumentError, "Unknown database config: #{name}, have #{ActiveRecord::Base.configurations.inspect}" unless config
-        ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec_for(config))
+      if @replicated && /#{Rails.env}_master/ =~ name
+        # take the active record default connection
+        @model_class.__original_ar_connection
+      else
+        self.class.shard_pools[name] ||= begin
+                                           config = ActiveRecord::Base.configurations[name]
+                                           raise ArgumentError, "Unknown database config: #{name}, have #{ActiveRecord::Base.configurations.inspect}" unless config
+                                           ActiveRecord::ConnectionAdapters::ConnectionPool.new(spec_for(config))
+                                         end
       end
     end
-    
+
     def spec_for(config)
       # XXX This looks pretty fragile.  Will break if AR changes how it initializes connections and adapters.
       config = config.symbolize_keys
@@ -116,7 +122,7 @@ module DataFabric
       initialize_adapter(config[:adapter])
       ActiveRecord::Base::ConnectionSpecification.new(config, adapter_method)
     end
-    
+
     def initialize_adapter(adapter)
       begin
         require 'rubygems'
@@ -129,7 +135,7 @@ module DataFabric
           raise "Please install the #{adapter} adapter: `gem install activerecord-#{adapter}-adapter` (#{$!})"
         end
       end
-    end      
+    end
 
     def connection_name_builder
       @connection_name_builder ||= begin
@@ -142,7 +148,7 @@ module DataFabric
         clauses
       end
     end
-    
+
     def connection
       current_pool.connection
     end
@@ -150,7 +156,7 @@ module DataFabric
     def set_role(role)
       Thread.current[:data_fabric_role] = role
     end
-    
+
     def current_role
       Thread.current[:data_fabric_role] || 'slave'
     end
