@@ -150,7 +150,22 @@ module DataFabric
     end
 
     def connection
-      current_pool.connection
+      cp = current_pool
+      if cp.kind_of?( ActiveRecord::ConnectionAdapters::MysqlAdapter )
+        cp
+      else
+        begin
+          cp.connection
+        rescue Mysql::Error, ActiveRecord::StatementInvalid => err
+          if current_role == 'slave' && err.message =~ /Can't connect to MySQL server/
+            # Try master
+            DataFabric.log(Logger::ERROR) { "Slave DB died #{err.class} #{err.message} trying with master" }
+            master
+          else
+            raise err
+          end
+        end
+      end
     end
 
     def set_role(role)
