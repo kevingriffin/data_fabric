@@ -75,7 +75,14 @@ module DataFabric
 
     def method_missing(method, *args, &block)
       DataFabric.log(Logger::DEBUG) { "Calling #{method} on #{connection}" }
-      connection.send(method, *args, &block)
+      r = connection.send(method, *args, &block)
+      # Don't hit method missing again
+      self.class_eval(<<-EVL, __FILE__, __LINE__)
+        def #{method}(*args, &block)
+          connection.send("#{method}", *args, &block)
+        end
+      EVL
+      r
     end
 
     def connection_name
