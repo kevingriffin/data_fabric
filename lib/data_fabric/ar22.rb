@@ -117,7 +117,7 @@ module DataFabric
     def load_up_connection_pool_for_connection_name(name)
       if @replicated && /#{Rails.env}_master/ =~ name
         # take the active record default connection instead of making an additional connection to the same db
-        @model_class.__original_connection_pool
+        @model_class.__original_ar_connection_pool
       else
         config = ActiveRecord::Base.configurations[name]
         raise ArgumentError, "Unknown database config: #{name}, have #{ActiveRecord::Base.configurations.inspect}" unless config
