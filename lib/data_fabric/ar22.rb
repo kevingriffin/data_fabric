@@ -22,7 +22,7 @@ module DataFabric
         @proxy = DataFabric::ConnectionProxy.new(self, options)
 
         class << self
-          alias_method :__original_ar_connection, :connection
+          alias_method :__original_ar_connection_pool, :connection_pool
           def connection
             @proxy
           end
@@ -117,7 +117,7 @@ module DataFabric
     def load_up_connection_pool_for_connection_name(name)
       if @replicated && /#{Rails.env}_master/ =~ name
         # take the active record default connection instead of making an additional connection to the same db
-        @model_class.__original_ar_connection
+        @model_class.__original_connection_pool
       else
         config = ActiveRecord::Base.configurations[name]
         raise ArgumentError, "Unknown database config: #{name}, have #{ActiveRecord::Base.configurations.inspect}" unless config
@@ -160,21 +160,14 @@ module DataFabric
     end
 
     def connection
-      cp = current_pool
-      if cp.kind_of?( ActiveRecord::ConnectionAdapters::MysqlAdapter )
-        cp
+      current_pool.connection
+    rescue Mysql::Error, ActiveRecord::StatementInvalid => err
+      if current_role == 'slave' && err.message =~ /Can't connect to MySQL server/
+        # Try master
+        DataFabric.log(Logger::ERROR) { "Slave DB died #{err.class} #{err.message} trying with master" }
+        master
       else
-        begin
-          cp.connection
-        rescue Mysql::Error, ActiveRecord::StatementInvalid => err
-          if current_role == 'slave' && err.message =~ /Can't connect to MySQL server/
-            # Try master
-            DataFabric.log(Logger::ERROR) { "Slave DB died #{err.class} #{err.message} trying with master" }
-            master
-          else
-            raise err
-          end
-        end
+        raise err
       end
     end
 
