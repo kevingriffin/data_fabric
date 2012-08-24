@@ -22,3 +22,19 @@ fiveruns_city_dallas_test_master:
 fiveruns_city_dallas_test_slave:
   adapter: sqlite3
   database: test/vr_dallas_slave.db
+
+
+# Setup sample databases on a system that is a mix of DataFabric and standard ActiveRecord
+# This is to help test that we don't use double connections for test and test_master
+
+test:
+  adapter: sqlite3
+  database: test/vr_austin_master.db
+
+test_master:
+  adapter: sqlite3
+  database: test/vr_austin_master.db
+
+test_slave:
+  adapter: sqlite3
+  database: test/vr_austin_slave.db

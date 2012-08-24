@@ -23,6 +23,7 @@ module DataFabric
 
         class << self
           alias_method :__original_ar_connection_pool, :connection_pool
+
           def connection
             @proxy
           end
@@ -110,12 +111,11 @@ module DataFabric
 
     def current_pool
       name = connection_name
-
       self.class.shard_pools[name] ||= load_up_connection_pool_for_connection_name(name)
     end
 
     def load_up_connection_pool_for_connection_name(name)
-      if @replicated && /#{Rails.env}_master/ =~ name
+      if @replicated && "#{Rails.env}_master" == name && ActiveRecord::Base.configurations[Rails.env]
         # take the active record default connection instead of making an additional connection to the same db
         @model_class.__original_ar_connection_pool
       else

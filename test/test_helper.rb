@@ -38,3 +38,19 @@ if !File.exist?(DATABASE_YML_PATH)
     "An example is provided in 'test/database.yml.example'.\n\n"
   exit 1
 end
+
+if !defined?(Mysql::Error)
+  puts "Mysql is not defined.", "Fake the error"
+  class Mysql
+    class Error < StandardError
+    end
+  end
+end
+
+if !defined?(Rails)
+  module Rails
+    def self.env
+      RAILS_ENV
+    end
+  end
+end

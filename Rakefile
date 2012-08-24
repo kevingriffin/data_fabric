@@ -75,21 +75,24 @@ end
 
 def setup(create = false)
   setup_connection
-  
+
   ActiveRecord::Base.configurations.each_pair do |identifier, config|
     using_connection(identifier) do
       send("create_#{config['adapter']}", create, config['database'])
-    end  
+    end
   end
 end
 
 def create_sqlite3(create, db_name)
   execute "drop table if exists the_whole_burritos"
   execute "drop table if exists enchiladas"
+  execute "drop table if exists"
   execute "create table enchiladas (id integer not null primary key, name varchar(30) not null)"
   execute "insert into enchiladas (id, name) values (1, '#{db_name}')"
   execute "create table the_whole_burritos (id integer not null primary key, name varchar(30) not null)"
   execute "insert into the_whole_burritos (id, name) values (1, '#{db_name}')"
+  execute "create table mixed_env_tacos (id integer not null primary key, name varchar(30) not null)"
+  execute "insert into mixed_env_tacos (id, name) values (1, '#{db_name}')"
 end
 
 def create_mysql(create, db_name)
@@ -100,10 +103,13 @@ def create_mysql(create, db_name)
   execute "use #{db_name}"
   execute "drop table if exists the_whole_burritos"
   execute "drop table if exists enchiladas"
+  execute "drop table if exists mixed_env_tacos"
   execute "create table enchiladas (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
   execute "insert into enchiladas (id, name) values (1, '#{db_name}')"
   execute "create table the_whole_burritos (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
   execute "insert into the_whole_burritos (id, name) values (1, '#{db_name}')"
+  execute "create table mixed_env_tacos (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
+  execute "insert into mixed_env_tacos (id, name) values (1, '#{db_name}')"
 end
 
 # Test coverage
