@@ -10,10 +10,10 @@ end
 
 module DataFabric
   module Extensions
-        
+
     def self.included(model)
       DataFabric.logger.info { "Loading data_fabric #{DataFabric::Version::STRING} with ActiveRecord #{ActiveRecord::VERSION::STRING}" }
-            
+
       # Wire up ActiveRecord::Base
       model.extend ClassMethods
       ConnectionProxy.shard_pools = {}
@@ -25,15 +25,15 @@ module DataFabric
         DataFabric.logger.info { "Creating data_fabric proxy for class #{name}" }
         connection_handler.connection_pools[name] = PoolProxy.new(ConnectionProxy.new(self, options))
       end
-      
+
       def with_master(&block)
         connection_handler.connection_pools[name].connection.with_master(&block)
       end
-      
+
       def with_current_db(&block)
         connection_handler.connection_pools[name].connection.with_current_db(&block)
       end
-      
+
       def with_slave(&block)
         connection_handler.connection_pools[name].connection.with_slave(&block)
       end

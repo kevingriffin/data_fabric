@@ -56,10 +56,18 @@ module DataFabric
     end
 
     def method_missing(name, *args)
-      DataFabric.logger.warn "Add '#{name}' to DataFabric::PoolProxy for performance"
-      @proxy.current_pool.send(name, *args)
+      result = @proxy.current_pool.send(name, *args)
+
+      self.class_eval(<<-EVL, __FILE__, __LINE__)
+        def #{method}(*args, &block)
+          connection.send("#{method}", *args, &block)
+        end
+      EVL
+
+      result
     end
   end
+
 
   class ConnectionProxy
     cattr_accessor  :shard_pools
@@ -126,6 +134,14 @@ module DataFabric
 
     def connection
       current_pool.connection
+    rescue ActiveRecord::StatementInvalid => err
+      if current_role == 'slave' && err.message =~ /Can't connect to MySQL server/
+        # Try master
+        DataFabric.log(Logger::ERROR) { "Slave DB died #{err.class} #{err.message} trying with master" }
+        master
+      else
+        raise err
+      end
     end
 
     def current_pool
@@ -145,6 +161,15 @@ module DataFabric
     end
 
     private
+
+    def load_up_connection_pool_for_connection_name(name)
+      if @replicated && "#{@environment}_master" == name && ActiveRecord::Base.configurations[@environment]
+        # take the active record default connection instead of making an additional connection to the same db
+        @model_class.__original_ar_connection_pool
+      else
+        create_pool(name)
+      end
+    end
 
     def slave_connection
       name = connection_name_builder('slave').join '_'

@@ -54,7 +54,7 @@ end
 
 class DynamicSwitchingTest < Test::Unit::TestCase
   def setup
-    ActiveRecord::Base.configurations = @settings = load_database_yml
+    ActiveRecord::Base.configurations = load_database_yml
   end
 
   def test_reads_from_slave_when_below_threshold
