@@ -34,3 +34,27 @@ fiveruns_city_dallas_test_slave:
   database: vr_dallas_slave
   username: root
   password:
+
+# Setup sample databases on a system that is a mix of DataFabric and standard ActiveRecord
+# This is to help test that we don't use double connections for test and test_master
+
+test:
+  adapter: mysql
+  host: localhost
+  database: vr_austin_master
+  username: root
+  password:
+
+test_master:
+  adapter: mysql
+  host: localhost
+  database: vr_austin_master
+  username: root
+  password:
+
+test_slave:
+  adapter: mysql
+  host: localhost
+  database: vr_austin_slave
+  username: root
+  password:

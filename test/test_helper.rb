@@ -29,3 +29,4 @@ def load_database_yml
   filename = DATABASE_YML_PATH
   YAML::load(ERB.new(IO.read(filename)).result)
 end
+

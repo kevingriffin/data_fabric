@@ -61,11 +61,11 @@ end
 
 def setup(create = false)
   setup_connection
-  
+
   ActiveRecord::Base.configurations.each_pair do |identifier, config|
     using_connection(identifier) do
       send("create_#{config['adapter']}", create, config['database'])
-    end  
+    end
   end
 end
 
@@ -76,6 +76,7 @@ def create_sqlite3(create, db_name)
   execute "drop table if exists replicate_models"
   execute "drop table if exists another_replicate_models"
   execute "drop table if exists normal_models"
+  execute "drop table if exists mixed_env_tacos"
   execute "create table enchiladas (id integer not null primary key, name varchar(30) not null)"
   execute "insert into enchiladas (id, name) values (1, '#{db_name}')"
   execute "create table the_whole_burritos (id integer not null primary key, name varchar(30) not null)"
@@ -89,11 +90,13 @@ def create_sqlite3(create, db_name)
   execute "insert into another_replicate_models (id, name) values (1, '#{db_name}')"
   execute "create table normal_models (id integer not null primary key, name varchar(30) not null)"
   execute "insert into normal_models (id, name) values (1, '#{db_name}')"
+  execute "create table mixed_env_tacos (id integer not null primary key, name varchar(30) not null)"
+  execute "insert into mixed_env_tacos (id, name) values (1, '#{db_name}')"
 end
 
 def create_mysql(create, db_name)
   db_name = File.basename(db_name).gsub(/(\..*)/, "")
-  
+
   if create
     execute "drop database if exists #{db_name}"
     execute "create database #{db_name}"
@@ -104,6 +107,7 @@ def create_mysql(create, db_name)
   execute "drop table if exists replicate_models"
   execute "drop table if exists another_replicate_models"
   execute "drop table if exists normal_models"
+  execute "drop table if exists mixed_env_tacos"
   execute "create table enchiladas (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
   execute "insert into enchiladas (id, name) values (1, '#{db_name}')"
   execute "create table the_whole_burritos (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
@@ -117,6 +121,8 @@ def create_mysql(create, db_name)
   execute "insert into another_replicate_models (id, name) values (1, '#{db_name}')"
   execute "create table normal_models (id integer not null primary key, name varchar(30) not null)"
   execute "insert into normal_models (id, name) values (1, '#{db_name}')"
+  execute "create table mixed_env_tacos (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
+  execute "insert into mixed_env_tacos (id, name) values (1, '#{db_name}')"
 end
 
 # Test coverage
