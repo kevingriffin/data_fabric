@@ -86,7 +86,7 @@ end
 def create_sqlite3(create, db_name)
   execute "drop table if exists the_whole_burritos"
   execute "drop table if exists enchiladas"
-  execute "drop table if exists"
+  execute "drop table if exists mixed_env_tacos"
   execute "create table enchiladas (id integer not null primary key, name varchar(30) not null)"
   execute "insert into enchiladas (id, name) values (1, '#{db_name}')"
   execute "create table the_whole_burritos (id integer not null primary key, name varchar(30) not null)"
