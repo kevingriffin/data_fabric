@@ -21,7 +21,7 @@ ActiveRecord::Base.logger.level = Logger::WARN
 # Bootstrap DF
 deps = defined?(ActiveSupport::Dependencies) ? ActiveSupport::Dependencies : Dependencies
 deps.load_paths << File.join(File.dirname(__FILE__), '../lib')
-require 'init'
+require_relative '../init'
 
 def load_database_yml
   filename = DATABASE_YML_PATH
