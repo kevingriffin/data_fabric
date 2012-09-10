@@ -159,9 +159,15 @@ module DataFabric
       end
     end
 
+    if defined?(::Mysql2::Error)
+      DB_ADAPTOR_ERROR = ::Mysql2::Error
+    else
+      DB_ADAPTOR_ERROR = ::Mysql::Error
+    end
+
     def connection
       current_pool.connection
-    rescue Mysql::Error, ActiveRecord::StatementInvalid => err
+    rescue DB_ADAPTOR_ERROR_, ActiveRecord::StatementInvalid => err
       if current_role == 'slave' && err.message =~ /Can't connect to MySQL server/
         # Try master
         DataFabric.log(Logger::ERROR) { "Slave DB died #{err.class} #{err.message} trying with master" }
