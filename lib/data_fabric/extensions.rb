@@ -17,11 +17,6 @@ module DataFabric
       # Wire up ActiveRecord::Base
       model.extend ClassMethods
       ConnectionProxy.shard_pools = {}
-
-      class << model
-       alias_method :__original_ar_connection_pool, :connection_pool
-      end
-
     end
 
     # Class methods injected into ActiveRecord::Base
