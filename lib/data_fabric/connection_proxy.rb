@@ -80,6 +80,7 @@ module DataFabric
       @prefix           = options[:prefix]
       @dynamic_toggle   = options[:dynamic_toggle]
       @environment      = (defined?(Rails) && Rails.env) || ENV["RAILS_ENV"] || "test"
+      @original_connection_pool = model_class.connection_pool
       set_role('slave') if @replicated
 
       if @dynamic_toggle && @replicated
@@ -157,7 +158,7 @@ module DataFabric
       end
 
       name = connection_name
-      self.class.shard_pools[name] ||= create_pool(name)
+      self.class.shard_pools[name] ||= load_up_connection_pool_for_connection_name name
     end
 
     private
@@ -165,7 +166,7 @@ module DataFabric
     def load_up_connection_pool_for_connection_name(name)
       if @replicated && "#{@environment}_master" == name && ActiveRecord::Base.configurations[@environment]
         # take the active record default connection instead of making an additional connection to the same db
-        @model_class.__original_ar_connection_pool
+        @original_connection_pool
       else
         create_pool(name)
       end
