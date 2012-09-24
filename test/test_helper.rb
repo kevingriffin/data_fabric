@@ -21,9 +21,14 @@ require 'active_record/version'
 ActiveRecord::Base.logger = Logger.new(STDOUT)
 ActiveRecord::Base.logger.level = Logger::WARN
 
+
 require 'data_fabric'
+# Bootstrap DF
+deps = defined?(ActiveSupport::Dependencies) ? ActiveSupport::Dependencies : Dependencies
+deps.load_paths << File.join(File.dirname(__FILE__), '../lib')
 
 DataFabric::DynamicSwitching.load_configurations( File.join(File.dirname(__FILE__), "database.yml") )
+
 
 def load_database_yml
   filename = DATABASE_YML_PATH
