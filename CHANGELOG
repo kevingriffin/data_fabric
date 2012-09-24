@@ -1,5 +1,38 @@
 DataFabric changelog
 
+v1.3.3 - 2011-10-29
+
+- Added ConnectionProxy#respond_to? which delegates to underlying connection
+(Paul Gross and Dan Manges)
+- Remove specific handling of nested transactions and let the underlying
+connection handle it (Paul Gross and Dan Manges)
+
+v1.3.2 - 2011-06-02
+
+- Fix problem fetching spec for connection pool.
+- Fix issues with Rails 3.1.
+
+v1.3.1 - 2011-02-10
+
+- Add some missing ConnectionPool methods (e.g. clear_reloadable_connections!)
+
+v1.3.0 - 2010-11-22
+
+- Major implementation refactoring
+- Fix issues under Rails 3.0.  Tested with 2.3.10, 3.0.0 and 3.0.3.
+- Drop support for Rails 2.2 (may work but untested)
+- Remove jeweler dependency
+
+v1.2.7 - 2010-08-10
+
+- NO FUNCTIONAL CHANGES.
+- Fix test suite under Ruby 1.9.2.
+- Update example22 application to example23 and Rails 2.3.
+
+v1.2.6 - Never released
+
+- STI fixes.
+
 v1.2.5 - 2009-03-28
 
 - data_fabric should now work as a gem or plugin.

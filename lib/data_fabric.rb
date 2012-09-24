@@ -1,5 +1,7 @@
 require 'active_record'
 require 'active_record/version'
+require 'active_record/connection_adapters/abstract/connection_pool'
+require 'active_record/connection_adapters/abstract/connection_specification'
 require 'data_fabric/version'
 
 # DataFabric adds a new level of flexibility to ActiveRecord connection handling.
@@ -38,20 +40,12 @@ require 'data_fabric/version'
 # end
 module DataFabric
 
-  # Set this logger to log DataFabric operations.
-  # The logger should quack like a standard Ruby Logger.
-  mattr_accessor :logger
-
-  def self.init
-    logger = ActiveRecord::Base.logger unless logger
-    log { "Loading data_fabric #{DataFabric::Version::STRING} with ActiveRecord #{ActiveRecord::VERSION::STRING}" }
-
-    if ActiveRecord::VERSION::STRING < '2.2.0'
-      require 'data_fabric/ar20'
-    else
-      require 'data_fabric/ar22'
-    end
-    ActiveRecord::Base.send(:include, DataFabric::Extensions)
+  def self.logger
+    @logger ||= ActiveRecord::Base.logger || default_logger 
+  end
+  
+  def self.logger=(log)
+    @logger = log
   end
   
   def self.activate_shard(shards, &block)
@@ -85,9 +79,9 @@ module DataFabric
   def self.active_shard(group)
     raise ArgumentError, 'No shard has been activated' unless Thread.current[:shards]
 
-    returning(Thread.current[:shards][group.to_s]) do |shard|
-      raise ArgumentError, "No active shard for #{group}" unless shard
-    end
+    shard = Thread.current[:shards][group.to_s]
+    raise ArgumentError, "No active shard for #{group}" unless shard
+    shard
   end
   
   def self.shard_active_for?(group)
@@ -99,8 +93,16 @@ module DataFabric
     Thread.current[:shards] = {} unless Thread.current[:shards]
   end
 
-  def self.log(level=Logger::INFO, &block)
-    logger && logger.add(level, &block)
+  private
+  def self.default_logger
+    devnull = RUBY_PLATFORM =~ /w32/ ? 'nul' : '/dev/null'
+    l = Logger.new(devnull)
+    l.level = Logger::INFO
+    l
   end
 
 end
+
+require 'data_fabric/extensions'
+require 'data_fabric/dynamic_switching'
+ActiveRecord::Base.send(:include, DataFabric::Extensions)

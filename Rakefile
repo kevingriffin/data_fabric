@@ -1,35 +1,19 @@
-require 'rubygems'
-
-begin
-  require 'jeweler'
-
-  Jeweler::Tasks.new do |p|
-    p.authors = ["Mike Perham"]
-    p.email  = 'mperham@gmail.com'
-    p.rubyforge_project = 'fiveruns'
-    p.summary = 'Sharding and replication support for ActiveRecord 2.x'
-    p.homepage = "http://github.com/mperham/data_fabric"
-    p.name = "data_fabric"
-    p.files =  FileList['*.rdoc', 'Rakefile', 'VERSION.yml', 'init.rb', 'CHANGELOG', "{lib,test,rails,example,example22}/**/*", ]
-  end
-rescue LoadError
-  puts "Jeweler, or one of its dependencies, is not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
-end
+require 'fileutils'
+include FileUtils::Verbose
 
 require 'rake/testtask'
-
 Rake::TestTask.new do |t|
   t.verbose = true
+  t.libs << 'test'
   t.test_files = FileList['test/*_test.rb']
 end
 
-task :gemspec => [:clean]
-
 task :clean do
-  FileUtils.rm_f Dir['*.gem']
-  FileUtils.rm_f Dir['test/*.db']
-  FileUtils.rm_rf 'pkg'
-  FileUtils.rm_rf 'coverage'
+  rm_f Dir['*.gem']
+  rm_f Dir['test/*.db']
+  rm_rf 'coverage'
+
+  puts `cd example23 ; rake app:clean`
 end
 
 task :default => :test
@@ -62,6 +46,8 @@ def load_database_yml
 end
 
 def setup_connection
+  require 'erb'
+  require 'logger'
   require 'active_record'
   ActiveRecord::Base.configurations = load_database_yml
   ActiveRecord::Base.logger = Logger.new(STDOUT)
@@ -84,18 +70,33 @@ def setup(create = false)
 end
 
 def create_sqlite3(create, db_name)
+  db_name = File.basename(db_name).gsub(/(\..*)/, "")
   execute "drop table if exists the_whole_burritos"
   execute "drop table if exists enchiladas"
+  execute "drop table if exists replicate_models"
+  execute "drop table if exists another_replicate_models"
+  execute "drop table if exists normal_models"
   execute "drop table if exists mixed_env_tacos"
   execute "create table enchiladas (id integer not null primary key, name varchar(30) not null)"
   execute "insert into enchiladas (id, name) values (1, '#{db_name}')"
   execute "create table the_whole_burritos (id integer not null primary key, name varchar(30) not null)"
   execute "insert into the_whole_burritos (id, name) values (1, '#{db_name}')"
+  execute "create table replicate_models (id integer not null primary key, name varchar(30) not null)"
+  execute "create table another_replicate_models (id integer not null primary key, name varchar(30) not null)"
+  execute "insert into replicate_models (id, name) values (1, '#{db_name}')"
+  execute "insert into replicate_models (id, name) values (2, '#{db_name}')"
+  execute "insert into replicate_models (id, name) values (3, '#{db_name}')"
+  execute "insert into replicate_models (id, name) values (4, '#{db_name}')"
+  execute "insert into another_replicate_models (id, name) values (1, '#{db_name}')"
+  execute "create table normal_models (id integer not null primary key, name varchar(30) not null)"
+  execute "insert into normal_models (id, name) values (1, '#{db_name}')"
   execute "create table mixed_env_tacos (id integer not null primary key, name varchar(30) not null)"
   execute "insert into mixed_env_tacos (id, name) values (1, '#{db_name}')"
 end
 
 def create_mysql(create, db_name)
+  db_name = File.basename(db_name).gsub(/(\..*)/, "")
+
   if create
     execute "drop database if exists #{db_name}"
     execute "create database #{db_name}"
@@ -103,18 +104,30 @@ def create_mysql(create, db_name)
   execute "use #{db_name}"
   execute "drop table if exists the_whole_burritos"
   execute "drop table if exists enchiladas"
+  execute "drop table if exists replicate_models"
+  execute "drop table if exists another_replicate_models"
+  execute "drop table if exists normal_models"
   execute "drop table if exists mixed_env_tacos"
   execute "create table enchiladas (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
   execute "insert into enchiladas (id, name) values (1, '#{db_name}')"
   execute "create table the_whole_burritos (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
   execute "insert into the_whole_burritos (id, name) values (1, '#{db_name}')"
+  execute "create table replicate_models (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
+  execute "create table another_replicate_models (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
+  execute "insert into replicate_models (id, name) values (1, '#{db_name}')"
+  execute "insert into replicate_models (id, name) values (2, '#{db_name}')"
+  execute "insert into replicate_models (id, name) values (3, '#{db_name}')"
+  execute "insert into replicate_models (id, name) values (4, '#{db_name}')"
+  execute "insert into another_replicate_models (id, name) values (1, '#{db_name}')"
+  execute "create table normal_models (id integer not null primary key, name varchar(30) not null)"
+  execute "insert into normal_models (id, name) values (1, '#{db_name}')"
   execute "create table mixed_env_tacos (id integer not null auto_increment, name varchar(30) not null, primary key(id))"
   execute "insert into mixed_env_tacos (id, name) values (1, '#{db_name}')"
 end
 
 # Test coverage
 begin
-  gem 'spicycode-rcov' rescue nil
+  gem 'rcov' rescue nil
   require 'rcov/rcovtask'
 
   desc "Generate coverage numbers for all locally installed versions of ActiveRecord"
@@ -134,5 +147,5 @@ begin
     t.rcov_opts = ['--text-report', '--exclude', "test,Library,#{ENV['GEM_HOME']}", '--sort', 'coverage']
   end
 rescue LoadError => e
-  puts 'Test coverage support requires \'gem install spicycode-rcov\''
+  puts 'Test coverage support requires \'gem install rcov\''
 end

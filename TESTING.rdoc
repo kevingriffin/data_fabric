@@ -16,9 +16,9 @@ data_fabric ships with an example application which shows an actual Rails applic
 using data_fabric.  You can customize config/database.yml but by default it uses a local
 Sqlite3 database so there should be no customization necessary.
 
-Run the Rake task to prepare the application for testing.  This will copy the latest data_fabric code
-to vendor/plugins, delete existing databases and migrate all the databases from scratch.  You should
-then be able to run the example application's tests.
+Run the Rake task to prepare the application for testing.  This will delete existing SQLite
+databases and migrate all the databases from scratch.  You should then be able to run the
+example application's tests.
 
  cd example
  rake app:prepare

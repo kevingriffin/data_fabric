@@ -1,6 +1,5 @@
-require File.join(File.dirname(__FILE__), 'test_helper')
-require 'flexmock/test_unit'
-require 'erb'
+require 'test_helper'
+require 'test/unit'
 
 class TheWholeBurrito < ActiveRecord::Base
   data_fabric :prefix => 'fiveruns', :replicated => true, :shard_by => :city
@@ -15,21 +14,13 @@ class DatabaseTest < Test::Unit::TestCase
 
   def setup
     ActiveRecord::Base.configurations = load_database_yml
-    if ar22?
-      DataFabric::ConnectionProxy.shard_pools.clear
-    end
+    DataFabric::ConnectionProxy.shard_pools.clear
   end
 
-  def test_ar22_features
-    return unless ar22?
-
+  def test_features
     DataFabric.activate_shard :city => :dallas do
       assert_equal 'fiveruns_city_dallas_test_slave', TheWholeBurrito.connection.connection_name
-
-      assert_raises RuntimeError do
-        TheWholeBurrito.connection_pool
-      end
-
+      assert_equal DataFabric::PoolProxy, TheWholeBurrito.connection_pool.class
       assert !TheWholeBurrito.connected?
 
       # Should use the slave
@@ -41,7 +32,7 @@ class DatabaseTest < Test::Unit::TestCase
   end
 
   def test_mixed_env_connection_master_uses_base_ar_connection
-    MixedEnvTaco.establish_connection
+    MixedEnvTaco.establish_connection :test_master
 
     original_connection = MixedEnvTaco.connection
 
@@ -53,7 +44,7 @@ class DatabaseTest < Test::Unit::TestCase
     assert_not_equal(original_connection, MixedEnvTaco.connection)
 
 
-    assert_kind_of(DataFabric::ConnectionProxy, MixedEnvTaco.instance_variable_get("@proxy"))
+    # assert_kind_of(DataFabric::ConnectionProxy, MixedEnvTaco.instance_variable_get("@proxy"))
     assert_equal(original_connection,
                  MixedEnvTaco.connection.send("master"),
                  "Master Datbase of MixedEnvTaco should use the default ActiveRecord Database connection")

@@ -1,5 +1,12 @@
 = data_fabric
 
+---------------------------
+I'm looking for someone to take over maintenance and responsibility
+for data_fabric.  If you use data_fabric or have an interest in its ongoing
+development, please let me know.
+---------------------------
+
+
 DataFabric provides flexible database connection switching for ActiveRecord.
 
 We needed two features to scale our mysql database: application-level sharding and 
@@ -21,6 +28,11 @@ then in config/environment.rb, add a config.gem entry:
     ...
     config.gem 'data_fabric'
 
+or add data_fabric to your Gemfile:
+
+  gem 'data_fabric'
+
+data_fabric has been tested with Rails 2.3.10 and 3.0.7.
 
 == How does it work?
 
@@ -69,33 +81,30 @@ ActionController around_filter based on the user as follows:
 == Warnings
 
 * Sharded models should never be placed in the session store or you will get "Shard not set" errors when the session is persisted.
-* DataFabric does not support running with ActiveRecord's allow_concurrency = true in AR 2.0 and 2.1.  allow_concurrency is gone in AR 2.2.
 * DataFabric does not work in development mode with cache_classes = false.  You will get an error in ActiveRecord's clear_reloadable_connections! method.
 
 == Testing and Bug Reports
 
-If you think you've found a problem with data_fabric, please use the example application to reproduce the bug and send me the diff.  The example application is a stock Rails 2.1 application which uses data_fabric in the expected fashion.
+If you think you've found a problem with data_fabric, please use the example23 or example30 application to reproduce the bug and send me the diff.
 
 
 == Thanks to...
 
 Rick Olsen of Rails Core:: for the Masochism plugin, which showed me how to bend AR's connection handling to my will
 Bradley Taylor of RailsMachine:: for the advice to shard while at acts_as_conference
-FiveRuns:: for paying me to develop this code and allowing its release
 
 
 == Author
 
 Mike Perham <mperham@gmail.com>
 http://mikeperham.com
+http://twitter.com/mperham
 
 
 == LICENSE:
- 
-(The FiveRuns License)
- 
-Copyright (c) 2008 FiveRuns Corporation
- 
+
+Copyright (c) 2010 Mike Perham
+
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
 'Software'), to deal in the Software without restriction, including

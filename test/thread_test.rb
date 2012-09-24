@@ -1,24 +1,10 @@
-require File.join(File.dirname(__FILE__), 'test_helper')
-require 'erb'
+require 'test_helper'
+require 'test/unit'
 
 class ThreadTest < Test::Unit::TestCase
-  
+
   MUTEX = Mutex.new
 
-  if ActiveRecord::VERSION::STRING < '2.2.0'
-    def test_concurrency_not_allowed
-      assert_raise ArgumentError do
-        Object.class_eval %{
-          class ThreadedEnchilada < ActiveRecord::Base
-            self.allow_concurrency = true
-            set_table_name :enchiladas
-            data_fabric :prefix => 'fiveruns', :replicated => true, :shard_by => :city
-          end
-        }
-      end
-    end
-  end
-  
   def test_class_and_instance_connections
     Object.class_eval %{
       class ThreadedEnchilada < ActiveRecord::Base
@@ -32,7 +18,7 @@ class ThreadTest < Test::Unit::TestCase
     iconn = ThreadedEnchilada.new.connection
     assert_equal cconn, iconn
   end
-  
+
   def xtest_threaded_access
     clear_databases
 
@@ -62,7 +48,7 @@ class ThreadTest < Test::Unit::TestCase
       end
     end
     threads.each { |thread| thread.join }
-    
+
     counts.each_pair do |city, count| 
       DataFabric.activate_shard(:city => city) do
         # slave should be empty
@@ -76,9 +62,9 @@ class ThreadTest < Test::Unit::TestCase
       end
     end
   end
-  
+
   private
-  
+
   def clear_databases
     ActiveRecord::Base.configurations = { 'test' => { :adapter => 'mysql', :host => 'localhost', :database => 'mysql' } }
     ActiveRecord::Base.establish_connection 'test'
@@ -91,7 +77,7 @@ class ThreadTest < Test::Unit::TestCase
     end
     ActiveRecord::Base.clear_active_connections!
   end
-  
+
   def using_connection(&block)
     ActiveRecord::Base.connection.instance_eval(&block)
   end
