@@ -22,5 +22,5 @@ development_slave:
   password:
   host: localhost
   check_interval: 2
-  delay_threshold: 3
+  delay_threshold: 0
   
