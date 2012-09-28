@@ -58,6 +58,7 @@ module DataFabric::DynamicSwitching
     end
 
     def master=(arg)
+      log(arg) if arg != master
       Thread.current["#{@name}_status"] = arg
     end
 
@@ -68,6 +69,10 @@ module DataFabric::DynamicSwitching
 
     def slave_connection=(connection)
       self.poller.slave_connection = connection
+    end
+
+    def log(new_status)
+      DataFabric.logger.info "Using #{new_status ? "master" : "slave"} now"
     end
   end
 
