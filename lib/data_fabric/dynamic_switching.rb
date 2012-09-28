@@ -107,7 +107,8 @@ module DataFabric::DynamicSwitching
 
   class SQLSlaveChecker
     def initialize(name)
-      @name = name
+      @name   = name
+      @sbmidx = nil
     end
 
     def slave_connection=(connection)
@@ -119,10 +120,26 @@ module DataFabric::DynamicSwitching
     end
 
     def seconds_behind
-      return far_behind unless @connection && @connection.adapter_name =~ /mysql/i
-      result  = @connection.execute "SHOW SLAVE STATUS;"
-      seconds = result.split("\n").grep(/Seconds_Behind_Master/).scan(/\d|NULL/).first rescue far_behind
-      seconds =~ /NULL/ ? far_behind : seconds.to_i
+      return far_behind unless @connection
+
+      if @connection.respond_to?(:connection)
+        connection = @connection.connection
+      else
+        connection = @connection
+      end
+
+      result  = connection.execute "SHOW SLAVE STATUS;"
+
+      begin
+      @sbmidx = result.fields.index("Seconds_Behind_Master") if @sbmidx.nil?
+      seconds = result.first[@sbmidx]
+
+      rescue => err
+        DataFabric.logger.debug("Using DF ERROR #{err.class} #{err.message} #{err.backtrace[0..3].join("::")}")
+        seconds = far_behind
+      end
+
+      seconds.nil? ? far_behind : seconds.to_i
     end
 
     def behind?(threshold)
