@@ -8,8 +8,8 @@ class SQLSlaveCheckerTest < Test::Unit::TestCase
     @slave_checker.slave_connection = ActiveRecord::Base.connection
   end
 
-  def test_seconds_behind_should_return_no_lag_for_an_improper_setup
-    assert_equal 0, @slave_checker.seconds_behind
+  def test_seconds_behind_should_return_lots_of_lag_for_an_improper_setup
+    assert @slave_checker.seconds_behind > 100, "did not return lag"
   end
 
   def test_it_should_not_change_the_connection_for_non_replicated_classes
