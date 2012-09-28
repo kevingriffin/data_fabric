@@ -94,7 +94,7 @@ def create_sqlite3(create, db_name)
   execute "insert into mixed_env_tacos (id, name) values (1, '#{db_name}')"
 end
 
-def create_mysql(create, db_name)
+def create_mysql2(create, db_name)
   db_name = File.basename(db_name).gsub(/(\..*)/, "")
 
   if create
