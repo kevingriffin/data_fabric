@@ -1,13 +1,7 @@
 module DataFabric
   module ActiveRecordConnectionMethods
-    def self.included(base)
-      unless base.method_defined? :reload_without_master
-        base.alias_method_chain :reload, :master
-      end
-    end
-
-    def reload_with_master(*args, &block)
-      connection.with_master { reload_without_master }
+    def reload(*args, &block)
+      self.class.with_master { super }
     end
   end
 
