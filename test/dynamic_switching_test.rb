@@ -96,4 +96,8 @@ class DynamicSwitchingTest < Test::Unit::TestCase
     ReplicateModel.connection.status_checker.poller = TimedPollerMock.new(1)
     ReplicateModel.with_current_db { ReplicateModel.find_in_batches(:batch_size => 1) { |batch| sleep 0.5; assert_equal "test_slave", batch.first.name } }
   end
+
+  def test_reload_should_use_master
+    assert_equal "test_master", ReplicateModel.find(1).reload.name
+  end
 end
