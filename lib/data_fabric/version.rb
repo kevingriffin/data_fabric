@@ -1,5 +1,5 @@
 module DataFabric
   module Version
-    STRING = '1.4.4.cerego'
+    STRING = '1.5.0.cerego'
   end
 end
