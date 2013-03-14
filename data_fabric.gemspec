@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
     "README.rdoc"
   ]
   s.test_files = Dir.glob("test/**/*")
-  s.files = Dir.glob("lib/**/*") + Dir.glob("example23/**/*") + Dir.glob("example30/**/*") + [
+  s.files = Dir.glob("lib/**/*") + Dir.glob("example30/**/*") + [
     "CHANGELOG",
     "README.rdoc",
     "Rakefile",
@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency(%q<minitest>, ["> 0"])
   s.add_development_dependency(%q<flexmock>, ["> 0"])
   s.add_development_dependency(%q<sqlite3>, ["> 0"])
-  s.add_development_dependency(%q<mysql2>, ["~> 0.2.18"])
-  s.add_development_dependency(%q<activerecord>, ["~> 3.0.3"])
+  s.add_development_dependency(%q<mysql2>, ["~> 0.3.11"])
+  s.add_development_dependency(%q<activerecord>, ["~> 3.1.11"])
 end
 
