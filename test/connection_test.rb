@@ -3,6 +3,9 @@ require 'test/unit'
 require 'flexmock'
 require 'active_record/connection_adapters/mysql2_adapter'
 
+ActiveRecord::Base.configurations = load_database_yml
+ActiveRecord::Base.establish_connection("test_master")
+
 class PrefixModel < ActiveRecord::Base
   data_fabric :prefix => 'prefix'
 end
@@ -62,12 +65,12 @@ class ConnectionTest < Test::Unit::TestCase
   def test_should_install_into_arbase
     assert PrefixModel.methods.map(&:to_s).include?('data_fabric')
   end
-  
+
   def test_prefix_connection_name
     setup_configuration_for PrefixModel, 'prefix_test'
     assert_equal 'prefix_test', PrefixModel.connection.connection_name
   end
-  
+
   def test_shard_connection_name
     setup_configuration_for ShardModel, 'city_austin_test'
     # ensure unset means error
@@ -82,7 +85,7 @@ class ConnectionTest < Test::Unit::TestCase
       ShardModel.connection.connection_name
     end
   end
-  
+
   def test_respond_to_connection_methods
     setup_configuration_for ShardModel, 'city_austin_test'
     DataFabric.activate_shard(:city => 'austin', :category => 'art') do
@@ -91,7 +94,7 @@ class ConnectionTest < Test::Unit::TestCase
       assert !ShardModel.connection.respond_to?(:nonexistent_method)
     end
   end
-  
+
   def test_respond_to_connection_proxy_methods
     setup_configuration_for ShardModel, 'city_austin_test'
     DataFabric.activate_shard(:city => 'austin', :category => 'art') do
@@ -99,19 +102,19 @@ class ConnectionTest < Test::Unit::TestCase
       assert !ShardModel.connection.respond_to?(:nonexistent_method)
     end
   end
-  
+
   def test_enchilada
     setup_configuration_for TheWholeEnchilada, 'fiveruns_city_dallas_test_slave'
     setup_configuration_for TheWholeEnchilada, 'fiveruns_city_dallas_test_master'
-  
+
     DataFabric.activate_shard :city => :dallas do
       assert_equal 'fiveruns_city_dallas_test_slave', TheWholeEnchilada.connection.connection_name
-  
+
       # Should use the slave
       assert_raises ActiveRecord::RecordNotFound do
         TheWholeEnchilada.find(1)
       end
-  
+
       # Should use the master
       mmmm = TheWholeEnchilada.new
       mmmm.instance_variable_set(:@attributes, { 'id' => 1 })
@@ -120,7 +123,7 @@ class ConnectionTest < Test::Unit::TestCase
       end
       # ...but immediately set it back to default to the slave
       assert_equal 'fiveruns_city_dallas_test_slave', TheWholeEnchilada.connection.connection_name
-  
+
       # Should use the master
       TheWholeEnchilada.transaction do
         mmmm.save!
@@ -129,12 +132,12 @@ class ConnectionTest < Test::Unit::TestCase
       TheWholeEnchilada.clear_active_connections!
       TheWholeEnchilada.clear_all_connections!
     end
-  
+
     TheWholeEnchilada.verify_active_connections!
     TheWholeEnchilada.clear_active_connections!
     TheWholeEnchilada.clear_all_connections!
   end
-    
+
   private
 
   def setup_configuration_for(clazz, name)
