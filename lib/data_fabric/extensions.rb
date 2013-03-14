@@ -21,22 +21,32 @@ module DataFabric
 
     # Class methods injected into ActiveRecord::Base
     module ClassMethods
-
       def data_fabric(options)
         DataFabric.logger.info { "Creating data_fabric proxy for class #{name}" }
-        connection_handler.connection_pools[name] = PoolProxy.new(ConnectionProxy.new(self, options))
-      end
+        cattr_accessor :df_proxy
+        self.df_proxy = ConnectionProxy.new(self, options)
 
-      def with_master(&block)
-        connection_handler.connection_pools[name].connection.with_master(&block)
-      end
+        class << self
+          def connection
+            df_proxy
+          end
 
-      def with_current_db(&block)
-        connection_handler.connection_pools[name].connection.with_current_db(&block)
-      end
+          def with_master(&block)
+            connection.with_master(&block)
+          end
 
-      def with_slave(&block)
-        connection_handler.connection_pools[name].connection.with_slave(&block)
+          def with_current_db(&block)
+            connection.with_current_db(&block)
+          end
+
+          def with_slave(&block)
+            connection.with_slave(&block)
+          end
+
+          def connected?
+            df_proxy.connected?
+          end
+        end
       end
     end
   end
