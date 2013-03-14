@@ -20,55 +20,6 @@ module DataFabric
     end
   end
 
-  class PoolProxy
-    def initialize(proxy)
-      @proxy = proxy
-    end
-
-    def connection
-      @proxy
-    end
-
-    def spec
-      @proxy.current_pool.spec
-    end
-
-    def with_connection
-      yield @proxy
-    end
-
-    def connected?
-      @proxy.connected?
-    end
-
-    %w(disconnect! release_connection clear_reloadable_connections! clear_stale_cached_connections! verify_active_connections!).each do |name|
-      define_method(name.to_sym) do
-        @proxy.shard_pools.values.each do |pool|
-          pool.send(name.to_sym)
-        end
-      end
-    end
-
-    %w(columns column_defaults columns_hash table_exists? primary_keys).each do |name|
-      define_method(name.to_sym) do |*args|
-        @proxy.current_pool.send(name.to_sym, *args)
-      end
-    end
-
-    def method_missing(name, *args)
-      result = @proxy.current_pool.send(name, *args)
-
-      self.class_eval(<<-EVL, __FILE__, __LINE__)
-        def #{method}(*args, &block)
-          connection.send("#{method}", *args, &block)
-        end
-      EVL
-
-      result
-    end
-  end
-
-
   class ConnectionProxy
     cattr_accessor  :shard_pools
     attr_accessor   :status_checker
