@@ -51,6 +51,10 @@ class AdapterMock < ActiveRecord::ConnectionAdapters::AbstractAdapter
   def self.visitor_for(pool)
     Arel::Visitors::MySQL.new(pool)
   end
+
+  def visitor
+    @visitor ||= Class.new { def accept(arel_ast) ; end }.new
+  end
 end
 
 class RawConnection
