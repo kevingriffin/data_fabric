@@ -49,9 +49,9 @@ module DataFabric
 
     delegate :insert_many, :to => :master # ar-extensions bulk insert support
 
-    def transaction(start_db_transaction = true, &block)
+    def transaction(options = {}, &block)
       with_master do
-        connection.transaction(start_db_transaction, &block)
+        connection.transaction(options, &block)
       end
     end
 
